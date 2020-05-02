@@ -22,34 +22,23 @@
  * SOFTWARE.
  */
 
-#include <ArduinoECCX08.h>
+// #include <ArduinoECCX08.h>
 
 #include "ArduinoBearSSL.h"
 #include "BearSSLTrustAnchors.h"
-#include "utility/eccX08_asn1.h"
+// #include "utility/eccX08_asn1.h"
 
 #include "BearSSLClient.h"
 
 BearSSLClient::BearSSLClient(Client& client) :
-  BearSSLClient(client, TAs, TAs_NUM, false)
-{
-}
-
-BearSSLClient::BearSSLClient(Client& client, bool noSNI) :
-  BearSSLClient(client, TAs, TAs_NUM, noSNI)
+  BearSSLClient(client, TAs, TAs_NUM)
 {
 }
 
 BearSSLClient::BearSSLClient(Client& client, const br_x509_trust_anchor* myTAs, int myNumTAs) :
-  BearSSLClient(client, myTAs, myNumTAs, false)
-{
-}
-
-BearSSLClient::BearSSLClient(Client& client, const br_x509_trust_anchor* myTAs, int myNumTAs, bool noSNI) :
   _client(&client),
   _TAs(myTAs),
-  _numTAs(myNumTAs),
-  _noSNI(noSNI)
+  _numTAs(myNumTAs)
 {
   _ecKey.curve = 0;
   _ecKey.x = NULL;
@@ -83,7 +72,7 @@ int BearSSLClient::connect(const char* host, uint16_t port)
     return 0;
   }
 
-  return connectSSL(_noSNI ? NULL : host);
+  return connectSSL(host);
 }
 
 size_t BearSSLClient::write(uint8_t b)
@@ -264,7 +253,7 @@ int BearSSLClient::connectSSL(const char* host)
 
   // inject entropy in engine
   unsigned char entropy[32];
-
+/*
   if (ECCX08.begin() && ECCX08.locked() && ECCX08.random(entropy, sizeof(entropy))) {
     // ECC508 random success, add custom ECDSA vfry and EC sign
     br_ssl_engine_set_ecdsa(&_sc.eng, eccX08_vrfy_asn1);
@@ -274,12 +263,12 @@ int BearSSLClient::connectSSL(const char* host)
     if (_ecCert.data_len && _ecKey.xlen) {
       br_ssl_client_set_single_ec(&_sc, &_ecCert, 1, &_ecKey, BR_KEYTYPE_KEYX | BR_KEYTYPE_SIGN, BR_KEYTYPE_EC, br_ec_get_default(), eccX08_sign_asn1);
     }
-  } else {
+  } else {*/
     // no ECCX08 or random failed, fallback to pseudo random
     for (size_t i = 0; i < sizeof(entropy); i++) {
       entropy[i] = random(0, 255);
     }
-  }
+  //}
   br_ssl_engine_inject_entropy(&_sc.eng, entropy, sizeof(entropy));
 
   // set the hostname used for SNI
